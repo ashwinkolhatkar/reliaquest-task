@@ -1,0 +1,244 @@
+openapi: 3.0.3
+info:
+  title: Employee Management API
+  description: API for managing employee data
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+paths:
+  /employee:
+    get:
+      summary: Get all employees
+      description: Returns a list of all employees
+      operationId: getAllEmployees
+      responses:
+        '200':
+          description: List of employees retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+    post:
+      summary: Create a new employee
+      description: Creates a new employee with the provided details
+      operationId: createEmployee
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreateRequest'
+      responses:
+        '200':
+          description: Employee created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /employee/{id}:
+    get:
+      summary: Get employee by ID
+      description: Returns a single employee by their UUID
+      operationId: getEmployeeById
+      parameters:
+        - $ref: '#/components/parameters/employeeId'
+      responses:
+        '200':
+          description: Employee found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+    delete:
+      summary: Delete employee by ID
+      description: Deletes an employee with the specified ID
+      operationId: deleteEmployeeById
+      parameters:
+        - $ref: '#/components/parameters/employeeId'
+      responses:
+        '200':
+          description: Success status of deletion
+          content:
+            application/json:
+              schema:
+                type: string
+                example: "true"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /employee/search/{searchString}:
+    get:
+      summary: Search employees by name
+      description: Returns employees whose names contain the search string
+      operationId: getEmployeesByNameSearch
+      parameters:
+        - name: searchString
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of matching employees
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Employee'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /employee/highestSalary:
+    get:
+      summary: Get highest salary
+      description: Returns the highest salary among all employees
+      operationId: getHighestSalaryOfEmployees
+      responses:
+        '200':
+          description: Highest salary found
+          content:
+            application/json:
+              schema:
+                type: integer
+                format: int32
+                example: 150000
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  /employee/topTenHighestEarningEmployeeNames:
+    get:
+      summary: Get top 10 highest earning employee names
+      description: Returns names of the top 10 employees by salary
+      operationId: getTopTenHighestEarningEmployeeNames
+      responses:
+        '200':
+          description: List of employee names
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                maxItems: 10
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+components:
+  schemas:
+    Employee:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        salary:
+          type: integer
+          format: int32
+        age:
+          type: integer
+          format: int32
+        title:
+          type: string
+        email:
+          type: string
+          format: email
+      required:
+        - id
+        - name
+        - salary
+        - age
+        - title
+        - email
+
+    EmployeeCreateRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+        title:
+          type: string
+          minLength: 1
+        salary:
+          type: integer
+          format: int32
+          minimum: 1
+        age:
+          type: integer
+          format: int32
+          minimum: 16
+          maximum: 75
+      required:
+        - name
+        - title
+        - salary
+        - age
+
+    Error:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+        status:
+          type: integer
+        error:
+          type: string
+        message:
+          type: string
+        path:
+          type: string
+
+  parameters:
+    employeeId:
+      name: id
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    BadRequest:
+      description: Invalid input provided
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+
+    TooManyRequests:
+      description: Too many requests - rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
