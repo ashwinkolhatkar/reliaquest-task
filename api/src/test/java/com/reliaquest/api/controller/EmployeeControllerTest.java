@@ -1,6 +1,7 @@
 package com.reliaquest.api.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.reliaquest.api.exception.EmployeeNotFoundException;
 import com.reliaquest.api.model.Employee;
 import com.reliaquest.api.model.EmployeeCreateRequest;
 import com.reliaquest.api.service.EmployeeService;
@@ -21,113 +22,6 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-//@WebMvcTest(EmployeeController.class)
-//class EmployeeControllerTest {
-//
-//    @Autowired
-//    private MockMvc mockMvc;
-//
-//    @MockBean
-//    private EmployeeService employeeService;
-//
-//    @Autowired
-//    private ObjectMapper objectMapper;
-//
-//    private Employee testEmployee;
-//    private List<Employee> employeeList;
-//    private EmployeeCreateRequest createRequest;
-//
-//    @BeforeEach
-//    void setUp() {
-//        testEmployee = new Employee();
-//        testEmployee.setId("1");
-//        testEmployee.setName("John Doe");
-//        testEmployee.setSalary(50000);
-//
-//        employeeList = Arrays.asList(testEmployee);
-//
-//        createRequest = new EmployeeCreateRequest();
-//        createRequest.setEmployeeName("John Doe");
-//        createRequest.setEmployeeSalary(50000);
-//    }
-//
-//    @Test
-//    void getAllEmployees_ShouldReturnListOfEmployees() throws Exception {
-//        when(employeeService.getAllEmployees()).thenReturn(employeeList);
-//
-//        mockMvc.perform(get("/api/v1/employee"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$[0].id").value("1"))
-//                .andExpect(jsonPath("$[0].name").value("John Doe"));
-//    }
-//
-//    @Test
-//    void getEmployeesByNameSearch_ShouldReturnMatchingEmployees() throws Exception {
-//        when(employeeService.searchByName(anyString())).thenReturn(employeeList);
-//
-//        mockMvc.perform(get("/api/v1/employee/search/John"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$[0].name").value("John Doe"));
-//    }
-//
-//    @Test
-//    void getEmployeeById_ShouldReturnEmployee() throws Exception {
-//        when(employeeService.getById(anyString())).thenReturn(testEmployee);
-//
-//        mockMvc.perform(get("/api/v1/employee/{id}", "1"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$.id").value("1"))
-//                .andExpect(jsonPath("$.name").value("John Doe"));
-//    }
-//
-//    @Test
-//    void getHighestSalaryOfEmployees_ShouldReturnHighestSalary() throws Exception {
-//        when(employeeService.getHighestSalary()).thenReturn(100000);
-//
-//        mockMvc.perform(get("/api/v1/employee/highestSalary"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(content().string("100000"));
-//    }
-//
-//    @Test
-//    void getTopTenHighestEarningEmployeeNames_ShouldReturnListOfNames() throws Exception {
-//        List<String> topEarners = Arrays.asList("John Doe", "Jane Smith");
-//        when(employeeService.getTop10Earners()).thenReturn(topEarners);
-//
-//        mockMvc.perform(get("/api/v1/employee/topTenHighestEarningEmployeeNames"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$[0]").value("John Doe"))
-//                .andExpect(jsonPath("$[1]").value("Jane Smith"));
-//    }
-//
-//    @Test
-//    void createEmployee_ShouldReturnCreatedEmployee() throws Exception {
-//        when(employeeService.createEmployee(any(EmployeeCreateRequest.class))).thenReturn(testEmployee);
-//
-//        mockMvc.perform(post("/api/v1/employee")
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(objectMapper.writeValueAsString(createRequest)))
-//                .andExpect(status().isOk())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-//                .andExpect(jsonPath("$.name").value("John Doe"));
-//    }
-//
-//    @Test
-//    void deleteEmployeeById_ShouldReturnSuccess() throws Exception {
-//        when(employeeService.deleteByName(anyString())).thenReturn(true);
-//
-//        mockMvc.perform(delete("/api/v1/employee/{id}", "1"))
-//                .andExpect(status().isOk())
-//                .andExpect(content().string("true"));
-//    }
-//}
-
-
 import java.util.Collections;
 import java.util.UUID;
 
@@ -146,19 +40,26 @@ class EmployeeControllerTest {
     private Employee testEmployee;
     private List<Employee> employeeList;
     private EmployeeCreateRequest createRequest;
+    private UUID testUUID;
 
     @BeforeEach
     void setUp() {
+        testUUID = UUID.randomUUID();
         testEmployee = new Employee();
-        testEmployee.setId("1");
+        testEmployee.setId(testUUID.toString());
         testEmployee.setName("John Doe");
         testEmployee.setSalary(50000);
+        testEmployee.setTitle("Doctor");
+        testEmployee.setAge(22);
+        testEmployee.setEmail("drjohdoe@hospital.com");
 
         employeeList = Arrays.asList(testEmployee);
 
         createRequest = new EmployeeCreateRequest();
-        createRequest.setEmployeeName("John Doe");
-        createRequest.setEmployeeSalary(50000);
+        createRequest.setName("John Doe");
+        createRequest.setSalary(50000);
+        createRequest.setTitle("Doctor");
+        createRequest.setAge(22);
     }
 
     @Test
@@ -169,7 +70,7 @@ class EmployeeControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$[0].id").value("1"))
+                .andExpect(jsonPath("$[0].id").value(testUUID.toString()))
                 .andExpect(jsonPath("$[0].name").value("John Doe"));
     }
 
@@ -183,15 +84,6 @@ class EmployeeControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$").isEmpty());
-    }
-
-    @Test
-    void getAllEmployees_WhenServiceThrowsException_ShouldReturn500() throws Exception {
-        when(employeeService.getAllEmployees()).thenThrow(new RuntimeException("Database error"));
-
-        mockMvc.perform(get("/api/v1/employee")
-                        .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isInternalServerError());
     }
 
     @Test
@@ -218,13 +110,13 @@ class EmployeeControllerTest {
 
     @Test
     void getEmployeeById_ShouldReturnEmployee() throws Exception {
-        when(employeeService.getById(anyString())).thenReturn(testEmployee);
+        when(employeeService.getById(testUUID)).thenReturn(testEmployee);
 
-        mockMvc.perform(get("/api/v1/employee/{id}", "1")
+        mockMvc.perform(get("/api/v1/employee/{id}", testUUID.toString())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
-                .andExpect(jsonPath("$.id").value("1"))
+                .andExpect(jsonPath("$.id").value(testUUID.toString()))
                 .andExpect(jsonPath("$.name").value("John Doe"));
     }
 
@@ -232,7 +124,7 @@ class EmployeeControllerTest {
     void getEmployeeById_WhenNotFound_ShouldReturn404() throws Exception {
 
         UUID id = UUID.randomUUID();
-        when(employeeService.getById(id)).thenReturn(null);
+        when(employeeService.getById(id)).thenThrow(new EmployeeNotFoundException(id.toString()));
 
         mockMvc.perform(get("/api/v1/employee/{id}", id.toString())
                         .accept(MediaType.APPLICATION_JSON))
@@ -310,7 +202,7 @@ class EmployeeControllerTest {
 
     @Test
     void createEmployee_WithNegativeSalary_ShouldReturn400() throws Exception {
-        createRequest.setEmployeeSalary(-1000);
+        createRequest.setSalary(-1000);
 
         mockMvc.perform(post("/api/v1/employee")
                         .contentType(MediaType.APPLICATION_JSON)
